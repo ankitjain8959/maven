@@ -2,6 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ankit</groupId>
   <artifactId>maven</artifactId>
-  <description>Maven</description>
+  <packaging>pom</packaging>
+  <description>Maven Documentation</description>
   <version>1.0.0</version>
 </project>
