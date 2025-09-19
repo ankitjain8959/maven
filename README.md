@@ -26,9 +26,9 @@ The pom.xml file is the core of a Maven project. It contains information about t
 - repositories <br>
   Maven uses repositories to store and retrieve dependencies. <br>
   There are three types of repositories: <br>
-  Local Repository: A directory on the developer's machine where Maven stores downloaded artifacts.
-  Central Repository: A public repository provided by the Maven community.
-  Remote Repository: Custom repositories defined by the user or organization.
+    - Local Repository: A directory on the developer's machine where Maven stores downloaded artifacts.  
+    - Remote Repository: Custom repositories defined by the user or organization.  
+    - Central Repository: A public repository provided by the Maven community.  
   ```
   <repositories>
     <repository>
@@ -501,3 +501,71 @@ mvn install	- Installs the package in the local Maven repository <br>
 mvn verify	- Runs integration tests <br>
 mvn deploy	- Uploads the built artifact to a remote repository <br>
 
+
+
+# Maven <scope> Values: to determine dependency visibility
+- Maven manages dependencies (libraries) your project needs. But not all dependencies are needed at all times (compile time, runtime, testing, etc.). <br>
+<scope> tells Maven when a dependency is required and whether it should be included in the final build artifact (like a JAR file).
+
+- Default scope is `compile` if no scope is specified. It means the dependency is available in all build phases and included in the final artifact.  
+
+| Scope    | Description                                                                                                                                                   | Available In           | Included In Packaged Artifact | Comments                                                                    |
+|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------|-------------------------------|-----------------------------------------------------------------------------|
+| compile  | Default scope. Available in all build phases.                                                                                                                 | Compile, Test, Runtime | Yes                           | 
+| provided | Available at compile and test time, but not included in the final artifact.                                                                                   | Compile, Test          | No                            | Needed to compile the code, but not needed during runtime (Example: lombok) |
+| system   | Legacy; similar to `provided`, but you must explicitly provide the JAR file                                                                                   | Compile, Test          | No                            |
+| runtime  | Available at runtime and test time, but not at compile time.                                                                                                  | Test, Runtime          | Yes                           | Not needed to compile the code, but needed to run it (e.g., JDBC drivers)   |
+| test     | Only available during testing.                                                                                                                                | Test                   | No                            | when dependency is needed only for testing (e.g., JUnit, Mockito)           |
+| import   | special; used only in <dependencyManagement> to import dependency versions from another BOM pom. Does not add a library itself, just it's dependency metadata | N/A                    | N/A                           | helps you avoid hardcoding versions in your POM                             |
+
+
+Example:
+- `compile` (default) scope is used for libraries like `spring-boot-starter-web` or `spring-boot-starter-data-mongodb` that are needed to compile the code and also needed at runtime.
+- `provided` scope is used for libraries like `lombok` that are needed to compile the code but not needed at runtime because during compilation, lombok annotations are processed and the corresponding code is generated and included in the compiled classes. Therefore, the lombok library itself is not required at runtime.
+- `test` scope is used for libraries like `junit-jupiter` and `mockito-core` that are only needed during testing.
+- `runtime` scope is used for libraries like `mongodb-driver-sync` that are not needed to compile the code but are required at runtime to connect to MongoDB.
+- `import` scope is used to import a BOM (Bill of Materials) like `spring-boot-dependencies` to manage versions of multiple dependencies in one place.
+- `system` scope is a legacy scope and is rarely used. It requires you to provide the JAR file explicitly, which is not recommended.
+
+```<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <scope>compile</scope> <!-- Default scope -->
+    </dependency>
+
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <scope>provided</scope> <!-- Needed to compile, but not at runtime -->
+    </dependency>
+
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <scope>test</scope> <!-- Only needed for testing -->
+    </dependency>
+
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-sync</artifactId>
+        <scope>runtime</scope> <!-- Needed at runtime, not compile time -->
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>3.2.0</version>
+        <type>pom</type>
+        <scope>import</scope> <!-- Importing BOM for dependency versions -->
+    </dependency>
+
+    <dependency>
+        <groupId>com.example</groupId>
+        <artifactId>my-local-lib</artifactId>
+        <version>1.0.0</version>
+        <scope>system</scope> <!-- Legacy; explicitly provide the JAR file -->
+        <systemPath>${project.basedir}/libs/my-local-lib-1.0.0.jar</systemPath>
+    </dependency>
+</dependencies>
+```
